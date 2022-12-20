@@ -4,6 +4,7 @@
 
 #include "pch.h"
 #include "Effect.h"
+#include "Texture.h"
 #include <assert.h>
 
 //---------------------------
@@ -16,40 +17,39 @@ Effect::Effect(ID3D11Device* pDevice, const std::wstring& assetFile)
 
 	m_pTechnique = m_pEffect->GetTechniqueByName("DefaultTechnique");
 
-
 	if (!m_pTechnique->IsValid())
 	{
 		std::wcout << L"Technique not valid\n";
 	}
 
-	//Create Vertex Layout
-	static constexpr uint32_t numElements{ 2 };
-	D3D11_INPUT_ELEMENT_DESC vertexDesc[numElements]{};
+	m_pWorldViewProjectionMatrix = m_pEffect->GetVariableByName("gWorldViewProj")->AsMatrix();
 
-	vertexDesc[0].SemanticName = "POSITION";
-	vertexDesc[0].Format = DXGI_FORMAT_R32G32B32_FLOAT;
-	vertexDesc[0].AlignedByteOffset = 0;
-	vertexDesc[0].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
+	if (!m_pWorldViewProjectionMatrix->IsValid())
+	{
+		std::wcout << L"WorldViewProjection matrix not valid\n";
+	}
 
-	vertexDesc[1].SemanticName = "COLOR";
-	vertexDesc[1].Format = DXGI_FORMAT_R32G32B32_FLOAT;
-	vertexDesc[1].AlignedByteOffset = 12; //3 x float --- float = 4 bytes
-	vertexDesc[1].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
+	m_pDiffuseMapVariable = m_pEffect->GetVariableByName("gDiffuseMap")->AsShaderResource();
 
-	//Create Input Layout
-	D3DX11_PASS_DESC passDesc{};
-	m_pTechnique->GetPassByIndex(0)->GetDesc(&passDesc);
-
-	const HRESULT result = pDevice->CreateInputLayout(vertexDesc, numElements, passDesc.pIAInputSignature, passDesc.IAInputSignatureSize, &m_pInputLayout);
-	if (FAILED(result)) assert(false);
+	if (!m_pDiffuseMapVariable->IsValid())
+	{
+		std::wcout << L"Diffuse map not valid\n";
+	}
 }
 
 Effect::~Effect()
 {
 	m_pInputLayout->Release();
+
+	m_pDiffuseMapVariable->Release();
+	m_pWorldViewProjectionMatrix->Release();
 	m_pTechnique->Release();
 	m_pEffect->Release();
 }
+
+//---------------------------
+// Member functions
+//---------------------------
 
 ID3DX11Effect* Effect::GetEffect() const
 {
@@ -66,6 +66,17 @@ ID3D11InputLayout* Effect::GetInputLayout() const
 	return m_pInputLayout;
 }
 
+void Effect::SetMatrix(const dae::Matrix& matrix)
+{
+	m_pWorldViewProjectionMatrix->SetMatrix(reinterpret_cast<const float*>(&matrix));
+}
+
+void Effect::SetDiffuseMap(Texture* pDiffuseTexture)
+{
+	if (m_pDiffuseMapVariable)
+		m_pDiffuseMapVariable->SetResource(pDiffuseTexture->GetResource());
+}
+
 ID3DX11Effect* Effect::LoadEffect(ID3D11Device* pDevice, const std::wstring& assetFile)
 {
 	HRESULT result;
@@ -74,13 +85,13 @@ ID3DX11Effect* Effect::LoadEffect(ID3D11Device* pDevice, const std::wstring& ass
 
 	DWORD shaderFlags{ 0 };
 
-	#if defined(DEBUG) || defined(_DEBUG)
+#if defined(DEBUG) || defined(_DEBUG)
 	shaderFlags |= D3DCOMPILE_DEBUG;
 	shaderFlags |= D3DCOMPILE_SKIP_OPTIMIZATION;
-	#endif
+#endif
 
 	result = D3DX11CompileEffectFromFile(assetFile.c_str(), nullptr, nullptr, shaderFlags, 0, pDevice, &pEffect, &pErrorBlob);
-	
+
 	if (FAILED(result))
 	{
 		if (pErrorBlob != nullptr)
@@ -111,9 +122,3 @@ ID3DX11Effect* Effect::LoadEffect(ID3D11Device* pDevice, const std::wstring& ass
 
 	return pEffect;
 }
-
-//---------------------------
-// Member functions
-//---------------------------
-
-// write member functions here

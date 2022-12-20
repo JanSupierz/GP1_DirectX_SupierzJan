@@ -38,6 +38,10 @@
     </ClInclude>
     <ClInclude Include="Effect.h" />
     <ClInclude Include="Mesh.h" />
+    <ClInclude Include="Camera.h" />
+    <ClInclude Include="Texture.h" />
+    <ClInclude Include="EffectUV.h" />
+    <ClInclude Include="EffectCol.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
@@ -60,5 +64,14 @@
     <ClCompile Include="pch.cpp" />
     <ClCompile Include="Effect.cpp" />
     <ClCompile Include="Mesh.cpp" />
+    <ClCompile Include="Texture.cpp">
+      <Filter>Math</Filter>
+    </ClCompile>
+    <ClCompile Include="EffectUV.cpp">
+      <Filter>Math</Filter>
+    </ClCompile>
+    <ClCompile Include="EffectCol.cpp">
+      <Filter>Math</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

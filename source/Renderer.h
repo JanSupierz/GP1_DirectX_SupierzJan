@@ -7,6 +7,8 @@ class Mesh;
 
 namespace dae
 {
+	struct Camera;
+
 	class Renderer final
 	{
 	public:
@@ -45,5 +47,8 @@ namespace dae
 
 		//Meshes
 		std::unique_ptr<Mesh> m_pMesh;
+
+		//Camera
+		std::unique_ptr<Camera> m_pCamera;
 	};
 }

@@ -3,16 +3,17 @@
 //-----------------------------------------------------
 // Include Files
 //-----------------------------------------------------
-
+class Texture;
 
 //-----------------------------------------------------
 // Effect Class									
 //-----------------------------------------------------
-class Effect final
+class Effect
 {
 public:
+	Effect() = default;
 	Effect(ID3D11Device* pDevice, const std::wstring& assetFile);
-	~Effect();
+	virtual ~Effect();
 
 	// -------------------------
 	// Copy/move constructors and assignment operators
@@ -28,7 +29,10 @@ public:
 	ID3DX11Effect* GetEffect() const;
 	ID3DX11EffectTechnique* GetTechnique() const;
 	ID3D11InputLayout* GetInputLayout() const;
-private:
+
+	void SetMatrix(const dae::Matrix& matrix);
+	void SetDiffuseMap(Texture* pDiffuseTexture);
+protected:
 	//-------------------------------------------------
 	// Private member functions								
 	//-------------------------------------------------
@@ -40,5 +44,7 @@ private:
 	ID3DX11Effect* m_pEffect;
 	ID3DX11EffectTechnique* m_pTechnique;
 	ID3D11InputLayout* m_pInputLayout;
+	ID3DX11EffectMatrixVariable* m_pWorldViewProjectionMatrix;
+	ID3DX11EffectShaderResourceVariable* m_pDiffuseMapVariable;
 };
 

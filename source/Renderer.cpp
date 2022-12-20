@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "Renderer.h"
 #include "Mesh.h"
+#include "Camera.h"
 
 namespace dae {
 
@@ -32,6 +33,9 @@ namespace dae {
 		std::vector<uint32_t> indices{ 0,1,2 };
 
 		m_pMesh = std::make_unique<Mesh>(m_pDevice, vertices, indices);
+
+		m_pCamera = std::make_unique<Camera>();
+		m_pCamera->Initialize(45.f, { 0.f,0.f,-10.f }, m_Width / static_cast<float>(m_Height));
 	}
 
 	Renderer::~Renderer()
@@ -76,7 +80,7 @@ namespace dae {
 
 	void Renderer::Update(const Timer* pTimer)
 	{
-
+		m_pCamera->Update(pTimer);
 	}
 
 
@@ -85,12 +89,12 @@ namespace dae {
 		if (!m_IsInitialized) return;
 		
 		//1. Clear RTV & DSV
-		ColorRGB clearColor = ColorRGB{ 0.f,0.f,0.3f };
+		ColorRGB clearColor{ 0.f,0.f,0.3f };
 		m_pDeviceContext->ClearRenderTargetView(m_pRenderTargetView, &clearColor.r);
 		m_pDeviceContext->ClearDepthStencilView(m_pDepthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.f, 0);
 
 		//2. Set Pipeline + Invoke DrawCalls
-		m_pMesh->Render(m_pDeviceContext);
+		m_pMesh->Render(m_pDeviceContext, m_pMesh->GetWorldMatrix() * m_pCamera->viewMatrix * m_pCamera->projectionMatrix);
 
 		//3. Present Backbuffer (Swap)
 		m_pSwapChain->Present(0, 0);

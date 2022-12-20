@@ -2,51 +2,47 @@
 //-----------------------------------------------------
 // Include Files
 //-----------------------------------------------------
-class Effect;
 
-
-struct Vertex_PosCol
-{
-	dae::Vector3 position;
-	dae::ColorRGB color;
-};
 
 //-----------------------------------------------------
-// Mesh Class									
+// Texture Class									
 //-----------------------------------------------------
-class Mesh final
+
+class Texture final
 {
 public:
-	Mesh(ID3D11Device* pDevice, std::vector<Vertex_PosCol>& vertices, std::vector<uint32_t>& indices);	// Constructor
-	~Mesh();						// Destructor
+	Texture() = default;
+	Texture(ID3D11Device* pDevice, const std::string& path);
+	virtual ~Texture();
 
 	// -------------------------
 	// Copy/move constructors and assignment operators
 	// -------------------------    
-	Mesh(const Mesh& other) = delete;
-	Mesh(Mesh&& other) noexcept = delete;
-	Mesh& operator=(const Mesh& other) = delete;
-	Mesh& operator=(Mesh&& other)	noexcept = delete;
+	Texture(const Texture& other) = delete;
+	Texture(Texture&& other) noexcept = delete;
+	Texture& operator=(const Texture& other) = delete;
+	Texture& operator=(Texture&& other)	noexcept = delete;
 
 	//-------------------------------------------------
 	// Member functions						
 	//-------------------------------------------------
-	void Render(ID3D11DeviceContext* pDeviceContext, const dae::Matrix& worldViewProjectionMatrix);
-	dae::Matrix GetWorldMatrix() const;
+	ID3D11ShaderResourceView* GetResource() const;
+
 private:
 	//-------------------------------------------------
 	// Private member functions								
 	//-------------------------------------------------
+	dae::ColorRGB Sample(const dae::Vector2& uv) const;
 
 	//-------------------------------------------------
 	// Datamembers								
 	//-------------------------------------------------
-	std::unique_ptr<Effect> m_pEffect;
+	Uint8* m_pRed, * m_pGreen, * m_pBlue;
 
-	uint32_t m_NumIndices;
+	ID3D11Texture2D* m_pResource{ nullptr };
+	ID3D11ShaderResourceView* m_pSRV{ nullptr };
 
-	ID3D11Buffer* m_pVertexBuffer;
-	ID3D11Buffer* m_pIndexBuffer;
-
-	dae::Matrix m_WorldMatrix{};
+	SDL_Surface* m_pSurface{ nullptr };
+	uint32_t* m_pSurfacePixels{ nullptr };
 };
+

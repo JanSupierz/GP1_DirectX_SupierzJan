@@ -3,15 +3,20 @@
 //---------------------------
 #include "pch.h"
 #include "Mesh.h"
-#include "Effect.h"
+#include "EffectCol.h"
+#include "EffectUV.h"
 
 //---------------------------
 // Constructor & Destructor
 //---------------------------
+
 Mesh::Mesh(ID3D11Device* pDevice, std::vector<Vertex_PosCol>& vertices, std::vector<uint32_t>& indices)
 {
-	// nothing to create
-	m_pEffect = std::make_unique<Effect>(pDevice, L"PosCol3D.fx");
+	m_WorldMatrix = { {1,0,0,0},{0,1,0,0},{0,0,1,0},{0,0,0,1} };
+
+	//Effect
+	//m_pEffect = std::make_unique<EffectCol>(pDevice, L"Resources/PosCol3DMatrix.fx");
+	m_pEffect = std::make_unique<EffectUV>(pDevice, L"Resources/PosUV3D.fx");
 
 	//Create Vertex Buffer
 	D3D11_BUFFER_DESC bd{};
@@ -48,7 +53,11 @@ Mesh::~Mesh()
 	m_pVertexBuffer->Release();
 }
 
-void Mesh::Render(ID3D11DeviceContext* pDeviceContext)
+//---------------------------
+// Member functions
+//---------------------------
+
+void Mesh::Render(ID3D11DeviceContext* pDeviceContext, const dae::Matrix& worldViewProjectionMatrix)
 {
 	//1. Set Primitive Topology
 	pDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -57,14 +66,17 @@ void Mesh::Render(ID3D11DeviceContext* pDeviceContext)
 	pDeviceContext->IASetInputLayout(m_pEffect->GetInputLayout());
 
 	//3. Set VertexBuffer
-	constexpr UINT stride = sizeof(Vertex_PosCol);
-	constexpr UINT offset = 0;
+	constexpr UINT stride{ sizeof(Vertex_PosCol) };
+	constexpr UINT offset{ 0 };
 	pDeviceContext->IASetVertexBuffers(0, 1, &m_pVertexBuffer, &stride, &offset);
 
 	//4. Set IndexBuffer
 	pDeviceContext->IASetIndexBuffer(m_pIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
 
-	//5. Draw
+	//5. Set Matrix
+	m_pEffect->SetMatrix(worldViewProjectionMatrix);
+
+	//6. Draw
 	D3DX11_TECHNIQUE_DESC techDesc{};
 	m_pEffect->GetTechnique()->GetDesc(&techDesc);
 
@@ -75,10 +87,9 @@ void Mesh::Render(ID3D11DeviceContext* pDeviceContext)
 	}
 }
 
-//---------------------------
-// Member functions
-//---------------------------
-
-// write member functions here
+dae::Matrix Mesh::GetWorldMatrix() const
+{
+	return m_WorldMatrix;
+}
 
 
