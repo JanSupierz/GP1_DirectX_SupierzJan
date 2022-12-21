@@ -1,7 +1,10 @@
 #include "pch.h"
 #include "Renderer.h"
 #include "Mesh.h"
+#include "Texture.h"
+#include "Sampler.h"
 #include "Camera.h"
+#include "Utils.h"
 
 namespace dae {
 
@@ -23,19 +26,39 @@ namespace dae {
 			std::cout << "DirectX initialization failed!\n";
 		}
 
-		std::vector<Vertex_PosCol> vertices
+#ifdef PosCol
+		std::vector<Vertex> vertices
 		{
-			{{0.f,0.5f,0.5f},{1.f,0.f,0.f}},
-			{{0.5f,-0.5f,0.5f},{0.f,0.f,1.f}},
-			{{-0.5f,-0.5f,0.5f},{0.f,1.f,0.f}}
+			{{0.f,3.f,2.f},{1.f,0.f,0.f}},
+			{{3.f, -3.f, 2.f},{0.f,0.f,1.f}},
+			{{-3.f,-3.f,2.f},{0.f,1.f,0.f}}
 		};
+#else
+		std::vector<Vertex> vertices
+		{
+			{{0.f,3.f,2.f},{1.f,0.f}},
+			{{3.f, -3.f, 2.f},{0.f,0.f}},
+			{{-3.f,-3.f,2.f},{0.f,1.f}}
+		};
+#endif
 
 		std::vector<uint32_t> indices{ 0,1,2 };
 
+		dae::Utils::ParseOBJ("Resources/vehicle.obj", vertices, indices);
+
+		//Initialize Camera
+		m_pCamera = std::make_unique<Camera>();
+		m_pCamera->Initialize(45.f, { 0.f,0.f,-50.f }, m_Width / static_cast<float>(m_Height));
+
+		m_pDiffuseMap = std::make_unique<Texture>(m_pDevice, "Resources/vehicle_diffuse.png");
+		m_pSampler = std::make_unique<Sampler>(m_pDevice);
+
+		//Initialize Mesh
 		m_pMesh = std::make_unique<Mesh>(m_pDevice, vertices, indices);
 
-		m_pCamera = std::make_unique<Camera>();
-		m_pCamera->Initialize(45.f, { 0.f,0.f,-10.f }, m_Width / static_cast<float>(m_Height));
+		m_pMesh->SetWorldViewProjectionMatrix(m_pCamera->viewMatrix * m_pCamera->projectionMatrix);
+		m_pMesh->SetDiffuseMap(m_pDiffuseMap.get());
+		m_pMesh->SetSamplerState(m_pSampler->GetSamplerState(D3D11_FILTER_MIN_MAG_MIP_POINT));
 	}
 
 	Renderer::~Renderer()
@@ -81,6 +104,13 @@ namespace dae {
 	void Renderer::Update(const Timer* pTimer)
 	{
 		m_pCamera->Update(pTimer);
+
+		if (m_ShouldRotate)
+		{
+			m_pMesh->RotateY(pTimer->GetElapsed());
+		}
+
+		m_pMesh->SetWorldViewProjectionMatrix(m_pCamera->viewMatrix * m_pCamera->projectionMatrix);
 	}
 
 
@@ -94,10 +124,38 @@ namespace dae {
 		m_pDeviceContext->ClearDepthStencilView(m_pDepthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.f, 0);
 
 		//2. Set Pipeline + Invoke DrawCalls
-		m_pMesh->Render(m_pDeviceContext, m_pMesh->GetWorldMatrix() * m_pCamera->viewMatrix * m_pCamera->projectionMatrix);
+		m_pMesh->Render(m_pDeviceContext);
 
 		//3. Present Backbuffer (Swap)
 		m_pSwapChain->Present(0, 0);
+	}
+
+	void Renderer::ToggleFilteringMethods()
+	{
+		if (m_FilteringMethod == FilteringMethod::Anisotropic)
+		{
+			m_FilteringMethod = FilteringMethod::Point;
+		}
+		else
+		{
+			m_FilteringMethod = static_cast<FilteringMethod>(static_cast<int>(m_FilteringMethod) + 1);
+		}
+
+		switch (m_FilteringMethod)
+		{
+		case FilteringMethod::Point:
+			std::cout << "SET TO POINT FILTERING\n";
+			m_pMesh->SetSamplerState(m_pSampler->GetSamplerState(D3D11_FILTER_MIN_MAG_MIP_POINT));
+			break;
+		case FilteringMethod::Linear:
+			std::cout << "SET TO LINEAR FILTERING\n";
+			m_pMesh->SetSamplerState(m_pSampler->GetSamplerState(D3D11_FILTER_MIN_MAG_MIP_LINEAR));
+			break;
+		case FilteringMethod::Anisotropic:
+			std::cout << "SET TO ANISOTROPIC FILTERING\n";
+			m_pMesh->SetSamplerState(m_pSampler->GetSamplerState(D3D11_FILTER_ANISOTROPIC));
+			break;
+		}
 	}
 
 	HRESULT Renderer::InitializeDirectX()

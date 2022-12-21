@@ -3,13 +3,23 @@
 // Include Files
 //-----------------------------------------------------
 class Effect;
+class Texture;
 
+//#define PosCol
 
-struct Vertex_PosCol
+#ifdef PosCol
+struct Vertex
 {
 	dae::Vector3 position;
 	dae::ColorRGB color;
 };
+#else
+struct Vertex
+{
+	dae::Vector3 position;
+	dae::Vector2 uv;
+};
+#endif
 
 //-----------------------------------------------------
 // Mesh Class									
@@ -17,8 +27,8 @@ struct Vertex_PosCol
 class Mesh final
 {
 public:
-	Mesh(ID3D11Device* pDevice, std::vector<Vertex_PosCol>& vertices, std::vector<uint32_t>& indices);	// Constructor
-	~Mesh();						// Destructor
+	Mesh(ID3D11Device* pDevice, std::vector<Vertex>& vertices, std::vector<uint32_t>& indices);
+	~Mesh();
 
 	// -------------------------
 	// Copy/move constructors and assignment operators
@@ -31,8 +41,15 @@ public:
 	//-------------------------------------------------
 	// Member functions						
 	//-------------------------------------------------
-	void Render(ID3D11DeviceContext* pDeviceContext, const dae::Matrix& worldViewProjectionMatrix);
-	dae::Matrix GetWorldMatrix() const;
+	void Render(ID3D11DeviceContext* pDeviceContext);
+
+	void SetDiffuseMap(Texture* pDiffuseMap);
+	void SetSamplerState(ID3D11SamplerState* pSamplerState);
+
+	void Translate(const dae::Vector3& translation);
+	void RotateY(float angle);
+
+	void SetWorldViewProjectionMatrix(const dae::Matrix& viewProjectionMatrix);
 private:
 	//-------------------------------------------------
 	// Private member functions								

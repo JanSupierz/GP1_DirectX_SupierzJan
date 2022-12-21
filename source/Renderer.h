@@ -1,9 +1,10 @@
 #pragma once
-
 struct SDL_Window;
 struct SDL_Surface;
 
+class Sampler;
 class Mesh;
+class Texture;
 
 namespace dae
 {
@@ -23,7 +24,12 @@ namespace dae
 		void Update(const Timer* pTimer);
 		void Render() const;
 
+		void ToggleFilteringMethods();
 	private:
+
+		enum class FilteringMethod { Point, Linear, Anisotropic };
+		FilteringMethod m_FilteringMethod{ FilteringMethod::Point };
+
 		SDL_Window* m_pWindow{};
 
 		int m_Width{};
@@ -47,8 +53,15 @@ namespace dae
 
 		//Meshes
 		std::unique_ptr<Mesh> m_pMesh;
+		bool m_ShouldRotate{ true };
 
 		//Camera
 		std::unique_ptr<Camera> m_pCamera;
+
+		//Textures
+		std::unique_ptr<Texture> m_pDiffuseMap;
+
+		//Samplers
+		std::unique_ptr<Sampler> m_pSampler;
 	};
 }

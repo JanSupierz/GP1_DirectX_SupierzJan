@@ -31,7 +31,9 @@ public:
 	ID3D11InputLayout* GetInputLayout() const;
 
 	void SetMatrix(const dae::Matrix& matrix);
+	void SetSamplerState(ID3D11SamplerState* pSamplerState);
 	void SetDiffuseMap(Texture* pDiffuseTexture);
+
 protected:
 	//-------------------------------------------------
 	// Private member functions								
@@ -46,5 +48,6 @@ protected:
 	ID3D11InputLayout* m_pInputLayout;
 	ID3DX11EffectMatrixVariable* m_pWorldViewProjectionMatrix;
 	ID3DX11EffectShaderResourceVariable* m_pDiffuseMapVariable;
+	ID3DX11EffectSamplerVariable* m_pSamplerStateVariable;
 };
 

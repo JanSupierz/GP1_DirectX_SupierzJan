@@ -35,6 +35,13 @@ Effect::Effect(ID3D11Device* pDevice, const std::wstring& assetFile)
 	{
 		std::wcout << L"Diffuse map not valid\n";
 	}
+
+	m_pSamplerStateVariable = m_pEffect->GetVariableByName("gSamplerState")->AsSampler();
+
+	if (!m_pSamplerStateVariable->IsValid())
+	{
+		std::wcout << L"Sampler state not valid\n";
+	}
 }
 
 Effect::~Effect()
@@ -69,6 +76,12 @@ ID3D11InputLayout* Effect::GetInputLayout() const
 void Effect::SetMatrix(const dae::Matrix& matrix)
 {
 	m_pWorldViewProjectionMatrix->SetMatrix(reinterpret_cast<const float*>(&matrix));
+}
+
+void Effect::SetSamplerState(ID3D11SamplerState* pSamplerState)
+{
+	HRESULT hr{ m_pSamplerStateVariable->SetSampler(0, pSamplerState) };
+	if (FAILED(hr)) std::wcout << L"Failed to change sample state";
 }
 
 void Effect::SetDiffuseMap(Texture* pDiffuseTexture)

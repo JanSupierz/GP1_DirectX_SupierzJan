@@ -3,6 +3,7 @@
 //---------------------------
 #include "pch.h"
 #include "Mesh.h"
+#include "Texture.h"
 #include "EffectCol.h"
 #include "EffectUV.h"
 
@@ -10,18 +11,21 @@
 // Constructor & Destructor
 //---------------------------
 
-Mesh::Mesh(ID3D11Device* pDevice, std::vector<Vertex_PosCol>& vertices, std::vector<uint32_t>& indices)
+Mesh::Mesh(ID3D11Device* pDevice, std::vector<Vertex>& vertices, std::vector<uint32_t>& indices)
 {
 	m_WorldMatrix = { {1,0,0,0},{0,1,0,0},{0,0,1,0},{0,0,0,1} };
 
 	//Effect
-	//m_pEffect = std::make_unique<EffectCol>(pDevice, L"Resources/PosCol3DMatrix.fx");
+#ifdef PosCol
+	m_pEffect = std::make_unique<EffectCol>(pDevice, L"Resources/PosCol3DMatrix.fx");
+#else
 	m_pEffect = std::make_unique<EffectUV>(pDevice, L"Resources/PosUV3D.fx");
+#endif
 
 	//Create Vertex Buffer
 	D3D11_BUFFER_DESC bd{};
 	bd.Usage = D3D11_USAGE_IMMUTABLE;
-	bd.ByteWidth = sizeof(Vertex_PosCol) * static_cast<uint32_t>(vertices.size());
+	bd.ByteWidth = sizeof(Vertex) * static_cast<uint32_t>(vertices.size());
 	bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 	bd.CPUAccessFlags = 0;
 	bd.MiscFlags = 0;
@@ -57,7 +61,7 @@ Mesh::~Mesh()
 // Member functions
 //---------------------------
 
-void Mesh::Render(ID3D11DeviceContext* pDeviceContext, const dae::Matrix& worldViewProjectionMatrix)
+void Mesh::Render(ID3D11DeviceContext* pDeviceContext)
 {
 	//1. Set Primitive Topology
 	pDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -66,17 +70,14 @@ void Mesh::Render(ID3D11DeviceContext* pDeviceContext, const dae::Matrix& worldV
 	pDeviceContext->IASetInputLayout(m_pEffect->GetInputLayout());
 
 	//3. Set VertexBuffer
-	constexpr UINT stride{ sizeof(Vertex_PosCol) };
+	constexpr UINT stride{ sizeof(Vertex) };
 	constexpr UINT offset{ 0 };
 	pDeviceContext->IASetVertexBuffers(0, 1, &m_pVertexBuffer, &stride, &offset);
 
 	//4. Set IndexBuffer
 	pDeviceContext->IASetIndexBuffer(m_pIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
 
-	//5. Set Matrix
-	m_pEffect->SetMatrix(worldViewProjectionMatrix);
-
-	//6. Draw
+	//5. Draw
 	D3DX11_TECHNIQUE_DESC techDesc{};
 	m_pEffect->GetTechnique()->GetDesc(&techDesc);
 
@@ -87,9 +88,29 @@ void Mesh::Render(ID3D11DeviceContext* pDeviceContext, const dae::Matrix& worldV
 	}
 }
 
-dae::Matrix Mesh::GetWorldMatrix() const
+void Mesh::SetWorldViewProjectionMatrix(const dae::Matrix& viewProjectionMatrix)
 {
-	return m_WorldMatrix;
+	m_pEffect->SetMatrix(m_WorldMatrix * viewProjectionMatrix);
+}
+
+void Mesh::SetDiffuseMap(Texture* pDiffuseMap)
+{
+	m_pEffect->SetDiffuseMap(pDiffuseMap);
+}
+
+void Mesh::SetSamplerState(ID3D11SamplerState* pSamplerState)
+{
+	m_pEffect->SetSamplerState(pSamplerState);
+}
+
+void Mesh::Translate(const dae::Vector3& translation)
+{
+	m_WorldMatrix *= dae::Matrix::CreateTranslation(translation);
+}
+
+void Mesh::RotateY(float angle)
+{
+	m_WorldMatrix = dae::Matrix::CreateRotationY(angle) * m_WorldMatrix;
 }
 
 
