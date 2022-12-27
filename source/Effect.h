@@ -30,9 +30,12 @@ public:
 	ID3DX11EffectTechnique* GetTechnique() const;
 	ID3D11InputLayout* GetInputLayout() const;
 
-	void SetMatrix(const dae::Matrix& matrix);
+	void SetMatrices(const dae::Matrix& worldViewProjection, const dae::Matrix& world, const dae::Matrix& inverseView);
 	void SetSamplerState(ID3D11SamplerState* pSamplerState);
 	void SetDiffuseMap(Texture* pDiffuseTexture);
+	void SetNormalMap(Texture* pNormalTexture);
+	void SetSpecularMap(Texture* pSpecularTexture);
+	void SetGlossinessMap(Texture* pGlossinessTexture);
 
 protected:
 	//-------------------------------------------------
@@ -46,8 +49,16 @@ protected:
 	ID3DX11Effect* m_pEffect;
 	ID3DX11EffectTechnique* m_pTechnique;
 	ID3D11InputLayout* m_pInputLayout;
+
 	ID3DX11EffectMatrixVariable* m_pWorldViewProjectionMatrix;
+	ID3DX11EffectMatrixVariable* m_pViewInverseMatrix;
+	ID3DX11EffectMatrixVariable* m_pWorldMatrix;
+
 	ID3DX11EffectShaderResourceVariable* m_pDiffuseMapVariable;
+	ID3DX11EffectShaderResourceVariable* m_pNormalMapVariable;
+	ID3DX11EffectShaderResourceVariable* m_pSpecularMapVariable;
+	ID3DX11EffectShaderResourceVariable* m_pGlossinessMapVariable;
+
 	ID3DX11EffectSamplerVariable* m_pSamplerStateVariable;
 };
 

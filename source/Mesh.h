@@ -5,21 +5,13 @@
 class Effect;
 class Texture;
 
-//#define PosCol
-
-#ifdef PosCol
-struct Vertex
-{
-	dae::Vector3 position;
-	dae::ColorRGB color;
-};
-#else
 struct Vertex
 {
 	dae::Vector3 position;
 	dae::Vector2 uv;
+	dae::Vector3 normal;
+	dae::Vector3 tangent;
 };
-#endif
 
 //-----------------------------------------------------
 // Mesh Class									
@@ -44,12 +36,15 @@ public:
 	void Render(ID3D11DeviceContext* pDeviceContext);
 
 	void SetDiffuseMap(Texture* pDiffuseMap);
+	void SetNormalMap(Texture* pNormalMap);
+	void SetSpecularMap(Texture* pSpecularMap);
+	void SetGlossinessMap(Texture* pGlossinessMap);
 	void SetSamplerState(ID3D11SamplerState* pSamplerState);
 
 	void Translate(const dae::Vector3& translation);
 	void RotateY(float angle);
 
-	void SetWorldViewProjectionMatrix(const dae::Matrix& viewProjectionMatrix);
+	void SetMatrices(const dae::Matrix& viewProjectionMatrix, const dae::Matrix& viewInverseMatrix);
 private:
 	//-------------------------------------------------
 	// Private member functions								

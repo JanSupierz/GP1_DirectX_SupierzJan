@@ -25,20 +25,18 @@ namespace dae
 		void Render() const;
 
 		void ToggleFilteringMethods();
+		void ToggleRotation();
+
 	private:
-
-		enum class FilteringMethod { Point, Linear, Anisotropic };
-		FilteringMethod m_FilteringMethod{ FilteringMethod::Point };
-
+		//Window
 		SDL_Window* m_pWindow{};
 
 		int m_Width{};
 		int m_Height{};
 
-		bool m_IsInitialized{ false };
-
 		//DIRECTX
 		HRESULT InitializeDirectX();
+		bool m_IsInitialized{ false };
 
 		ID3D11Device* m_pDevice;
 		ID3D11DeviceContext* m_pDeviceContext;
@@ -53,6 +51,7 @@ namespace dae
 
 		//Meshes
 		std::unique_ptr<Mesh> m_pMesh;
+		std::unique_ptr<Mesh> m_pFireMesh;
 		bool m_ShouldRotate{ true };
 
 		//Camera
@@ -60,8 +59,16 @@ namespace dae
 
 		//Textures
 		std::unique_ptr<Texture> m_pDiffuseMap;
+		std::unique_ptr<Texture> m_pNormalMap;
+		std::unique_ptr<Texture> m_pSpecularMap;
+		std::unique_ptr<Texture> m_pGlossinessMap;
 
-		//Samplers
+		std::unique_ptr<Texture> m_pFireDiffuseMap;
+
+		//Sampling
 		std::unique_ptr<Sampler> m_pSampler;
+
+		enum class FilteringMethod { Point, Linear, Anisotropic };
+		FilteringMethod m_FilteringMethod{ FilteringMethod::Point };
 	};
 }

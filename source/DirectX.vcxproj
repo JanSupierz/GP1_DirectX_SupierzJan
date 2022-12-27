@@ -81,7 +81,6 @@
     <ClInclude Include="Camera.h" />
     <ClInclude Include="ColorRGB.h" />
     <ClInclude Include="Effect.h" />
-    <ClInclude Include="EffectCol.h" />
     <ClInclude Include="EffectUV.h" />
     <ClInclude Include="MathHelpers.h" />
     <ClInclude Include="Matrix.h" />
@@ -99,7 +98,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Effect.cpp" />
-    <ClCompile Include="EffectCol.cpp" />
     <ClCompile Include="EffectUV.cpp" />
     <ClCompile Include="Matrix.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Use</PrecompiledHeader>

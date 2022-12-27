@@ -16,6 +16,7 @@ namespace dae {
 
 		//Initialize DirectX pipeline
 		const HRESULT result = InitializeDirectX();
+
 		if (result == S_OK)
 		{
 			m_IsInitialized = true;
@@ -26,39 +27,48 @@ namespace dae {
 			std::cout << "DirectX initialization failed!\n";
 		}
 
-#ifdef PosCol
-		std::vector<Vertex> vertices
-		{
-			{{0.f,3.f,2.f},{1.f,0.f,0.f}},
-			{{3.f, -3.f, 2.f},{0.f,0.f,1.f}},
-			{{-3.f,-3.f,2.f},{0.f,1.f,0.f}}
-		};
-#else
-		std::vector<Vertex> vertices
-		{
-			{{0.f,3.f,2.f},{1.f,0.f}},
-			{{3.f, -3.f, 2.f},{0.f,0.f}},
-			{{-3.f,-3.f,2.f},{0.f,1.f}}
-		};
-#endif
-
-		std::vector<uint32_t> indices{ 0,1,2 };
-
-		dae::Utils::ParseOBJ("Resources/vehicle.obj", vertices, indices);
-
 		//Initialize Camera
 		m_pCamera = std::make_unique<Camera>();
 		m_pCamera->Initialize(45.f, { 0.f,0.f,-50.f }, m_Width / static_cast<float>(m_Height));
 
 		m_pDiffuseMap = std::make_unique<Texture>(m_pDevice, "Resources/vehicle_diffuse.png");
+		m_pNormalMap = std::make_unique<Texture>(m_pDevice, "Resources/vehicle_normal.png");
+		m_pSpecularMap = std::make_unique<Texture>(m_pDevice, "Resources/vehicle_specular.png");
+		m_pGlossinessMap = std::make_unique<Texture>(m_pDevice, "Resources/vehicle_gloss.png");
+
 		m_pSampler = std::make_unique<Sampler>(m_pDevice);
 
-		//Initialize Mesh
+		//Initialize Meshes
+		std::vector<Vertex> vertices{};
+		std::vector<uint32_t> indices{ 0,1,2 };
+
+		//Not transparent
+		dae::Utils::ParseOBJ("Resources/vehicle.obj", vertices, indices);
+
 		m_pMesh = std::make_unique<Mesh>(m_pDevice, vertices, indices);
 
-		m_pMesh->SetWorldViewProjectionMatrix(m_pCamera->viewMatrix * m_pCamera->projectionMatrix);
+		m_pMesh->SetMatrices(m_pCamera->viewMatrix * m_pCamera->projectionMatrix, m_pCamera->invViewMatrix);
+
 		m_pMesh->SetDiffuseMap(m_pDiffuseMap.get());
+		m_pMesh->SetNormalMap(m_pNormalMap.get());
+		m_pMesh->SetSpecularMap(m_pSpecularMap.get());
+		m_pMesh->SetGlossinessMap(m_pGlossinessMap.get());
+
 		m_pMesh->SetSamplerState(m_pSampler->GetSamplerState(D3D11_FILTER_MIN_MAG_MIP_POINT));
+
+		//Transparent
+		dae::Utils::ParseOBJ("Resources/fireFX.obj", vertices, indices);
+
+		m_pFireMesh = std::make_unique<Mesh>(m_pDevice, vertices, indices);
+
+		m_pFireMesh->SetMatrices(m_pCamera->viewMatrix * m_pCamera->projectionMatrix, m_pCamera->invViewMatrix);
+
+		m_pFireMesh->SetDiffuseMap(m_pDiffuseMap.get());
+		m_pFireMesh->SetNormalMap(m_pNormalMap.get());
+		m_pFireMesh->SetSpecularMap(m_pSpecularMap.get());
+		m_pFireMesh->SetGlossinessMap(m_pGlossinessMap.get());
+
+		m_pFireMesh->SetSamplerState(m_pSampler->GetSamplerState(D3D11_FILTER_MIN_MAG_MIP_POINT));
 	}
 
 	Renderer::~Renderer()
@@ -110,7 +120,7 @@ namespace dae {
 			m_pMesh->RotateY(pTimer->GetElapsed());
 		}
 
-		m_pMesh->SetWorldViewProjectionMatrix(m_pCamera->viewMatrix * m_pCamera->projectionMatrix);
+		m_pMesh->SetMatrices(m_pCamera->viewMatrix * m_pCamera->projectionMatrix, m_pCamera->invViewMatrix);
 	}
 
 
@@ -141,21 +151,34 @@ namespace dae {
 			m_FilteringMethod = static_cast<FilteringMethod>(static_cast<int>(m_FilteringMethod) + 1);
 		}
 
+		std::cout << "----------------------------\n";
+
 		switch (m_FilteringMethod)
 		{
 		case FilteringMethod::Point:
-			std::cout << "SET TO POINT FILTERING\n";
+			std::cout << "POINT FILTERING\n";
 			m_pMesh->SetSamplerState(m_pSampler->GetSamplerState(D3D11_FILTER_MIN_MAG_MIP_POINT));
 			break;
 		case FilteringMethod::Linear:
-			std::cout << "SET TO LINEAR FILTERING\n";
+			std::cout << "LINEAR FILTERING\n";
 			m_pMesh->SetSamplerState(m_pSampler->GetSamplerState(D3D11_FILTER_MIN_MAG_MIP_LINEAR));
 			break;
 		case FilteringMethod::Anisotropic:
-			std::cout << "SET TO ANISOTROPIC FILTERING\n";
+			std::cout << "ANISOTROPIC FILTERING\n";
 			m_pMesh->SetSamplerState(m_pSampler->GetSamplerState(D3D11_FILTER_ANISOTROPIC));
 			break;
 		}
+
+		std::cout << "----------------------------\n";
+	}
+
+	void Renderer::ToggleRotation()
+	{
+		m_ShouldRotate = !m_ShouldRotate;
+
+		std::cout << "----------------------------\n";
+		std::cout << "ROTATION: " << (m_ShouldRotate ? "ON" : "OFF") << '\n';
+		std::cout << "----------------------------\n";
 	}
 
 	HRESULT Renderer::InitializeDirectX()

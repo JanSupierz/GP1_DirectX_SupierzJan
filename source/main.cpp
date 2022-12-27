@@ -58,6 +58,8 @@ int main(int argc, char* args[])
 			case SDL_KEYUP:
 				if (e.key.keysym.scancode == SDL_SCANCODE_F3)
 					pRenderer->ToggleFilteringMethods();
+				if (e.key.keysym.scancode == SDL_SCANCODE_F6)
+					pRenderer->ToggleRotation();
 				break;
 			default: ;
 			}

@@ -4,7 +4,6 @@
 #include "pch.h"
 #include "Mesh.h"
 #include "Texture.h"
-#include "EffectCol.h"
 #include "EffectUV.h"
 
 //---------------------------
@@ -13,14 +12,8 @@
 
 Mesh::Mesh(ID3D11Device* pDevice, std::vector<Vertex>& vertices, std::vector<uint32_t>& indices)
 {
-	m_WorldMatrix = { {1,0,0,0},{0,1,0,0},{0,0,1,0},{0,0,0,1} };
-
 	//Effect
-#ifdef PosCol
-	m_pEffect = std::make_unique<EffectCol>(pDevice, L"Resources/PosCol3DMatrix.fx");
-#else
 	m_pEffect = std::make_unique<EffectUV>(pDevice, L"Resources/PosUV3D.fx");
-#endif
 
 	//Create Vertex Buffer
 	D3D11_BUFFER_DESC bd{};
@@ -53,8 +46,15 @@ Mesh::Mesh(ID3D11Device* pDevice, std::vector<Vertex>& vertices, std::vector<uin
 
 Mesh::~Mesh()
 {
-	m_pIndexBuffer->Release();
-	m_pVertexBuffer->Release();
+	if (m_pIndexBuffer)
+	{
+		m_pIndexBuffer->Release();
+	}
+
+	if (m_pVertexBuffer)
+	{
+		m_pVertexBuffer->Release();
+	}
 }
 
 //---------------------------
@@ -88,14 +88,29 @@ void Mesh::Render(ID3D11DeviceContext* pDeviceContext)
 	}
 }
 
-void Mesh::SetWorldViewProjectionMatrix(const dae::Matrix& viewProjectionMatrix)
+void Mesh::SetMatrices(const dae::Matrix& viewProjectionMatrix, const dae::Matrix& viewInverseMatrix)
 {
-	m_pEffect->SetMatrix(m_WorldMatrix * viewProjectionMatrix);
+	m_pEffect->SetMatrices(m_WorldMatrix * viewProjectionMatrix, m_WorldMatrix, viewInverseMatrix);
 }
 
 void Mesh::SetDiffuseMap(Texture* pDiffuseMap)
 {
 	m_pEffect->SetDiffuseMap(pDiffuseMap);
+}
+
+void Mesh::SetNormalMap(Texture* pNormalMap)
+{
+	m_pEffect->SetNormalMap(pNormalMap);
+}
+
+void Mesh::SetSpecularMap(Texture* pSpecularMap)
+{
+	m_pEffect->SetSpecularMap(pSpecularMap);
+}
+
+void Mesh::SetGlossinessMap(Texture* pGlossinessMap)
+{
+	m_pEffect->SetGlossinessMap(pGlossinessMap);
 }
 
 void Mesh::SetSamplerState(ID3D11SamplerState* pSamplerState)
@@ -105,7 +120,7 @@ void Mesh::SetSamplerState(ID3D11SamplerState* pSamplerState)
 
 void Mesh::Translate(const dae::Vector3& translation)
 {
-	m_WorldMatrix *= dae::Matrix::CreateTranslation(translation);
+	m_WorldMatrix = dae::Matrix::CreateTranslation(m_WorldMatrix.GetTranslation() + translation);
 }
 
 void Mesh::RotateY(float angle)
