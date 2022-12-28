@@ -16,11 +16,11 @@ struct Vertex
 //-----------------------------------------------------
 // Mesh Class									
 //-----------------------------------------------------
-class Mesh final
+class Mesh
 {
 public:
-	Mesh(ID3D11Device* pDevice, std::vector<Vertex>& vertices, std::vector<uint32_t>& indices);
-	~Mesh();
+	Mesh(ID3D11Device* pDevice, const std::string& filePath );
+	virtual ~Mesh();
 
 	// -------------------------
 	// Copy/move constructors and assignment operators
@@ -34,22 +34,17 @@ public:
 	// Member functions						
 	//-------------------------------------------------
 	void Render(ID3D11DeviceContext* pDeviceContext);
-
-	void SetDiffuseMap(Texture* pDiffuseMap);
-	void SetNormalMap(Texture* pNormalMap);
-	void SetSpecularMap(Texture* pSpecularMap);
-	void SetGlossinessMap(Texture* pGlossinessMap);
 	void SetSamplerState(ID3D11SamplerState* pSamplerState);
 
 	void Translate(const dae::Vector3& translation);
 	void RotateY(float angle);
 
-	void SetMatrices(const dae::Matrix& viewProjectionMatrix, const dae::Matrix& viewInverseMatrix);
-private:
+	virtual void PrintTypeName() = 0;
+protected:
 	//-------------------------------------------------
 	// Private member functions								
 	//-------------------------------------------------
-
+	
 	//-------------------------------------------------
 	// Datamembers								
 	//-------------------------------------------------

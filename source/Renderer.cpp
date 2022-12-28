@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "Renderer.h"
-#include "Mesh.h"
+#include "MeshOpaque.h"
+#include "MeshTransparent.h"
 #include "Texture.h"
 #include "Sampler.h"
 #include "Camera.h"
@@ -36,38 +37,22 @@ namespace dae {
 		m_pSpecularMap = std::make_unique<Texture>(m_pDevice, "Resources/vehicle_specular.png");
 		m_pGlossinessMap = std::make_unique<Texture>(m_pDevice, "Resources/vehicle_gloss.png");
 
+		m_pFireDiffuseMap = std::make_unique<Texture>(m_pDevice, "Resources/fireFX_diffuse.png");
+
 		m_pSampler = std::make_unique<Sampler>(m_pDevice);
 
 		//Initialize Meshes
-		std::vector<Vertex> vertices{};
-		std::vector<uint32_t> indices{ 0,1,2 };
 
-		//Not transparent
-		dae::Utils::ParseOBJ("Resources/vehicle.obj", vertices, indices);
+		//Opaque
+		m_pVehicleMesh = std::make_unique<MeshOpaque>(m_pDevice, "Resources/vehicle.obj", m_pDiffuseMap.get(), m_pNormalMap.get(), m_pSpecularMap.get(), m_pGlossinessMap.get());
 
-		m_pMesh = std::make_unique<Mesh>(m_pDevice, vertices, indices);
-
-		m_pMesh->SetMatrices(m_pCamera->viewMatrix * m_pCamera->projectionMatrix, m_pCamera->invViewMatrix);
-
-		m_pMesh->SetDiffuseMap(m_pDiffuseMap.get());
-		m_pMesh->SetNormalMap(m_pNormalMap.get());
-		m_pMesh->SetSpecularMap(m_pSpecularMap.get());
-		m_pMesh->SetGlossinessMap(m_pGlossinessMap.get());
-
-		m_pMesh->SetSamplerState(m_pSampler->GetSamplerState(D3D11_FILTER_MIN_MAG_MIP_POINT));
+		m_pVehicleMesh->SetMatrices(m_pCamera->viewMatrix * m_pCamera->projectionMatrix, m_pCamera->invViewMatrix);
+		m_pVehicleMesh->SetSamplerState(m_pSampler->GetSamplerState(D3D11_FILTER_MIN_MAG_MIP_POINT));
 
 		//Transparent
-		dae::Utils::ParseOBJ("Resources/fireFX.obj", vertices, indices);
+		m_pFireMesh = std::make_unique<MeshTransparent>(m_pDevice, "Resources/fireFX.obj", m_pFireDiffuseMap.get());
 
-		m_pFireMesh = std::make_unique<Mesh>(m_pDevice, vertices, indices);
-
-		m_pFireMesh->SetMatrices(m_pCamera->viewMatrix * m_pCamera->projectionMatrix, m_pCamera->invViewMatrix);
-
-		m_pFireMesh->SetDiffuseMap(m_pDiffuseMap.get());
-		m_pFireMesh->SetNormalMap(m_pNormalMap.get());
-		m_pFireMesh->SetSpecularMap(m_pSpecularMap.get());
-		m_pFireMesh->SetGlossinessMap(m_pGlossinessMap.get());
-
+		m_pFireMesh->SetMatrix(m_pCamera->viewMatrix * m_pCamera->projectionMatrix);
 		m_pFireMesh->SetSamplerState(m_pSampler->GetSamplerState(D3D11_FILTER_MIN_MAG_MIP_POINT));
 	}
 
@@ -117,10 +102,14 @@ namespace dae {
 
 		if (m_ShouldRotate)
 		{
-			m_pMesh->RotateY(pTimer->GetElapsed());
+			const float angle{ pTimer->GetElapsed() };
+
+			m_pVehicleMesh->RotateY(angle);
+			m_pFireMesh->RotateY(angle);
 		}
 
-		m_pMesh->SetMatrices(m_pCamera->viewMatrix * m_pCamera->projectionMatrix, m_pCamera->invViewMatrix);
+		m_pVehicleMesh->SetMatrices(m_pCamera->viewMatrix * m_pCamera->projectionMatrix, m_pCamera->invViewMatrix);
+		m_pFireMesh->SetMatrix(m_pCamera->viewMatrix * m_pCamera->projectionMatrix);
 	}
 
 
@@ -134,7 +123,8 @@ namespace dae {
 		m_pDeviceContext->ClearDepthStencilView(m_pDepthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.f, 0);
 
 		//2. Set Pipeline + Invoke DrawCalls
-		m_pMesh->Render(m_pDeviceContext);
+		m_pVehicleMesh->Render(m_pDeviceContext);
+		m_pFireMesh->Render(m_pDeviceContext);
 
 		//3. Present Backbuffer (Swap)
 		m_pSwapChain->Present(0, 0);
@@ -151,25 +141,31 @@ namespace dae {
 			m_FilteringMethod = static_cast<FilteringMethod>(static_cast<int>(m_FilteringMethod) + 1);
 		}
 
+		ID3D11SamplerState* samplerState{};
+
 		std::cout << "----------------------------\n";
 
 		switch (m_FilteringMethod)
 		{
 		case FilteringMethod::Point:
 			std::cout << "POINT FILTERING\n";
-			m_pMesh->SetSamplerState(m_pSampler->GetSamplerState(D3D11_FILTER_MIN_MAG_MIP_POINT));
+			samplerState = m_pSampler->GetSamplerState(D3D11_FILTER_MIN_MAG_MIP_POINT);
 			break;
 		case FilteringMethod::Linear:
 			std::cout << "LINEAR FILTERING\n";
-			m_pMesh->SetSamplerState(m_pSampler->GetSamplerState(D3D11_FILTER_MIN_MAG_MIP_LINEAR));
+			samplerState = m_pSampler->GetSamplerState(D3D11_FILTER_MIN_MAG_MIP_LINEAR);
 			break;
+		default:
 		case FilteringMethod::Anisotropic:
 			std::cout << "ANISOTROPIC FILTERING\n";
-			m_pMesh->SetSamplerState(m_pSampler->GetSamplerState(D3D11_FILTER_ANISOTROPIC));
+			samplerState = m_pSampler->GetSamplerState(D3D11_FILTER_ANISOTROPIC);
 			break;
 		}
 
 		std::cout << "----------------------------\n";
+
+		m_pVehicleMesh->SetSamplerState(samplerState);
+		m_pFireMesh->SetSamplerState(samplerState);
 	}
 
 	void Renderer::ToggleRotation()

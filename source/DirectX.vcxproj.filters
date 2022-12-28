@@ -64,6 +64,12 @@
     <ClInclude Include="Mesh.h">
       <Filter>DataTypes\Meshes</Filter>
     </ClInclude>
+    <ClInclude Include="MeshTransparent.h">
+      <Filter>DataTypes\Meshes</Filter>
+    </ClInclude>
+    <ClInclude Include="MeshOpaque.h">
+      <Filter>DataTypes\Meshes</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
@@ -97,6 +103,12 @@
       <Filter>DataTypes</Filter>
     </ClCompile>
     <ClCompile Include="Mesh.cpp">
+      <Filter>DataTypes\Meshes</Filter>
+    </ClCompile>
+    <ClCompile Include="MeshTransparent.cpp">
+      <Filter>DataTypes\Meshes</Filter>
+    </ClCompile>
+    <ClCompile Include="MeshOpaque.cpp">
       <Filter>DataTypes\Meshes</Filter>
     </ClCompile>
   </ItemGroup>

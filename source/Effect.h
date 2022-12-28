@@ -31,6 +31,7 @@ public:
 	ID3D11InputLayout* GetInputLayout() const;
 
 	void SetMatrices(const dae::Matrix& worldViewProjection, const dae::Matrix& world, const dae::Matrix& inverseView);
+	void SetMatrix(const dae::Matrix& world);
 	void SetSamplerState(ID3D11SamplerState* pSamplerState);
 	void SetDiffuseMap(Texture* pDiffuseTexture);
 	void SetNormalMap(Texture* pNormalTexture);

@@ -3,7 +3,8 @@ struct SDL_Window;
 struct SDL_Surface;
 
 class Sampler;
-class Mesh;
+class MeshOpaque;
+class MeshTransparent;
 class Texture;
 
 namespace dae
@@ -50,8 +51,8 @@ namespace dae
 		ID3D11RenderTargetView* m_pRenderTargetView;
 
 		//Meshes
-		std::unique_ptr<Mesh> m_pMesh;
-		std::unique_ptr<Mesh> m_pFireMesh;
+		std::unique_ptr<MeshOpaque> m_pVehicleMesh;
+		std::unique_ptr<MeshTransparent> m_pFireMesh;
 		bool m_ShouldRotate{ true };
 
 		//Camera

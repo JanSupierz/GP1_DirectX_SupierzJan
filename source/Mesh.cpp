@@ -5,15 +5,18 @@
 #include "Mesh.h"
 #include "Texture.h"
 #include "EffectUV.h"
+#include <iostream>
+#include "Utils.h"
 
 //---------------------------
 // Constructor & Destructor
 //---------------------------
 
-Mesh::Mesh(ID3D11Device* pDevice, std::vector<Vertex>& vertices, std::vector<uint32_t>& indices)
+Mesh::Mesh(ID3D11Device* pDevice, const std::string& filename)
 {
-	//Effect
-	m_pEffect = std::make_unique<EffectUV>(pDevice, L"Resources/PosUV3D.fx");
+	std::vector<Vertex> vertices{};
+	std::vector<uint32_t> indices{};
+	dae::Utils::ParseOBJ(filename, vertices, indices);
 
 	//Create Vertex Buffer
 	D3D11_BUFFER_DESC bd{};
@@ -86,31 +89,6 @@ void Mesh::Render(ID3D11DeviceContext* pDeviceContext)
 		m_pEffect->GetTechnique()->GetPassByIndex(p)->Apply(0, pDeviceContext);
 		pDeviceContext->DrawIndexed(m_NumIndices, 0, 0);
 	}
-}
-
-void Mesh::SetMatrices(const dae::Matrix& viewProjectionMatrix, const dae::Matrix& viewInverseMatrix)
-{
-	m_pEffect->SetMatrices(m_WorldMatrix * viewProjectionMatrix, m_WorldMatrix, viewInverseMatrix);
-}
-
-void Mesh::SetDiffuseMap(Texture* pDiffuseMap)
-{
-	m_pEffect->SetDiffuseMap(pDiffuseMap);
-}
-
-void Mesh::SetNormalMap(Texture* pNormalMap)
-{
-	m_pEffect->SetNormalMap(pNormalMap);
-}
-
-void Mesh::SetSpecularMap(Texture* pSpecularMap)
-{
-	m_pEffect->SetSpecularMap(pSpecularMap);
-}
-
-void Mesh::SetGlossinessMap(Texture* pGlossinessMap)
-{
-	m_pEffect->SetGlossinessMap(pGlossinessMap);
 }
 
 void Mesh::SetSamplerState(ID3D11SamplerState* pSamplerState)

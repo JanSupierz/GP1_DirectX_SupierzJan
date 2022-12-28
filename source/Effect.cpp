@@ -183,6 +183,11 @@ void Effect::SetMatrices(const dae::Matrix& worldViewProjection, const dae::Matr
 	m_pViewInverseMatrix->SetMatrix(reinterpret_cast<const float*>(&viewInverse));
 }
 
+void Effect::SetMatrix(const dae::Matrix& worldViewProjection)
+{
+	m_pWorldViewProjectionMatrix->SetMatrix(reinterpret_cast<const float*>(&worldViewProjection));
+}
+
 void Effect::SetSamplerState(ID3D11SamplerState* pSamplerState)
 {
 	HRESULT hr{ m_pSamplerStateVariable->SetSampler(0, pSamplerState) };
