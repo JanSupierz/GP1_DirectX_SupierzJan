@@ -46,13 +46,13 @@ namespace dae {
 		//Opaque
 		m_pVehicleMesh = std::make_unique<MeshOpaque>(m_pDevice, "Resources/vehicle.obj", m_pDiffuseMap.get(), m_pNormalMap.get(), m_pSpecularMap.get(), m_pGlossinessMap.get());
 
-		m_pVehicleMesh->SetMatrices(m_pCamera->viewMatrix * m_pCamera->projectionMatrix, m_pCamera->invViewMatrix);
+		m_pVehicleMesh->SetMatrices(m_pCamera.get());
 		m_pVehicleMesh->SetSamplerState(m_pSampler->GetSamplerState(D3D11_FILTER_MIN_MAG_MIP_POINT));
 
 		//Transparent
 		m_pFireMesh = std::make_unique<MeshTransparent>(m_pDevice, "Resources/fireFX.obj", m_pFireDiffuseMap.get());
 
-		m_pFireMesh->SetMatrix(m_pCamera->viewMatrix * m_pCamera->projectionMatrix);
+		m_pFireMesh->SetMatrices(m_pCamera.get());
 		m_pFireMesh->SetSamplerState(m_pSampler->GetSamplerState(D3D11_FILTER_MIN_MAG_MIP_POINT));
 	}
 
@@ -108,8 +108,8 @@ namespace dae {
 			m_pFireMesh->RotateY(angle);
 		}
 
-		m_pVehicleMesh->SetMatrices(m_pCamera->viewMatrix * m_pCamera->projectionMatrix, m_pCamera->invViewMatrix);
-		m_pFireMesh->SetMatrix(m_pCamera->viewMatrix * m_pCamera->projectionMatrix);
+		m_pVehicleMesh->SetMatrices(m_pCamera.get());
+		m_pFireMesh->SetMatrices(m_pCamera.get());
 	}
 
 

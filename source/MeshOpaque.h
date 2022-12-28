@@ -29,8 +29,6 @@ public:
 	//-------------------------------------------------
 	void PrintTypeName() override;
 
-	void SetMatrices(const dae::Matrix& viewProjectionMatrix, const dae::Matrix& viewInverseMatrix);
-	
 	void SetDiffuseMap(Texture* pDiffuseMap);
 	void SetNormalMap(Texture* pNormalMap);
 	void SetSpecularMap(Texture* pSpecularMap);

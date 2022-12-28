@@ -30,5 +30,4 @@ public:
 	void PrintTypeName() override;
 
 	void SetDiffuseMap(Texture* pDiffuseMap);
-	void SetMatrix(const dae::Matrix& worldViewProjection);
 };

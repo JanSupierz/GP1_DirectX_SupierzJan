@@ -6,6 +6,7 @@
 #include "Effect.h"
 #include "Texture.h"
 #include <assert.h>
+#include "Camera.h"
 
 //---------------------------
 // Constructor & Destructor
@@ -14,7 +15,7 @@
 Effect::Effect(ID3D11Device* pDevice, const std::wstring& assetFile)
 {
 	m_pEffect = LoadEffect(pDevice, assetFile);
-	
+
 	//-----------------------------------------------------
 	// Techniques								
 	//-----------------------------------------------------
@@ -37,62 +38,50 @@ Effect::Effect(ID3D11Device* pDevice, const std::wstring& assetFile)
 		std::wcout << L"WorldViewProjection matrix not valid\n";
 	}
 
-	m_pWorldMatrix = m_pEffect->GetVariableByName("gWorld")->AsMatrix();
-
-	if (!m_pWorldMatrix->IsValid())
-	{
-		std::wcout << L"World matrix not valid\n";
-	}
-
-	m_pViewInverseMatrix = m_pEffect->GetVariableByName("gViewInverse")->AsMatrix();
-
-	if (!m_pViewInverseMatrix->IsValid())
-	{
-		std::wcout << L"View inverse matrix not valid\n";
-	}
-
-	//-----------------------------------------------------
-	// Maps								
-	//-----------------------------------------------------
-
-	m_pDiffuseMapVariable = m_pEffect->GetVariableByName("gDiffuseMap")->AsShaderResource();
-
-	if (!m_pDiffuseMapVariable->IsValid())
-	{
-		std::wcout << L"Diffuse map not valid\n";
-	}
-
-	m_pNormalMapVariable = m_pEffect->GetVariableByName("gNormalMap")->AsShaderResource();
-
-	if (!m_pNormalMapVariable->IsValid())
-	{
-		std::wcout << L"Normal map not valid\n";
-	}
-
-	m_pSpecularMapVariable = m_pEffect->GetVariableByName("gSpecularMap")->AsShaderResource();
-
-	if (!m_pSpecularMapVariable->IsValid())
-	{
-		std::wcout << L"Specular map not valid\n";
-	}
-
-	m_pGlossinessMapVariable = m_pEffect->GetVariableByName("gGlossinessMap")->AsShaderResource();
-
-	if (!m_pGlossinessMapVariable->IsValid())
-	{
-		std::wcout << L"Glossiness map not valid\n";
-	}
-
-	//-----------------------------------------------------
-	// States								
-	//-----------------------------------------------------
-
 	m_pSamplerStateVariable = m_pEffect->GetVariableByName("gSamplerState")->AsSampler();
 
 	if (!m_pSamplerStateVariable->IsValid())
 	{
 		std::wcout << L"Sampler state not valid\n";
 	}
+
+	//-----------------------------------------------------
+	// Vertex Layout								
+	//-----------------------------------------------------
+
+	static constexpr uint32_t numElements{ 4 };
+	D3D11_INPUT_ELEMENT_DESC vertexDesc[numElements]{};
+
+	vertexDesc[0].SemanticName = "POSITION";
+	vertexDesc[0].Format = DXGI_FORMAT_R32G32B32_FLOAT;
+	vertexDesc[0].AlignedByteOffset = 0;
+	vertexDesc[0].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
+
+	vertexDesc[1].SemanticName = "TEXCOORD";
+	vertexDesc[1].Format = DXGI_FORMAT_R32G32_FLOAT;
+	vertexDesc[1].AlignedByteOffset = 12; //3 x float --- float = 4 bytes
+	vertexDesc[1].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
+
+	vertexDesc[2].SemanticName = "NORMAL";
+	vertexDesc[2].Format = DXGI_FORMAT_R32G32B32_FLOAT;
+	vertexDesc[2].AlignedByteOffset = 20;
+	vertexDesc[2].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
+
+	vertexDesc[3].SemanticName = "TANGENT";
+	vertexDesc[3].Format = DXGI_FORMAT_R32G32B32_FLOAT;
+	vertexDesc[3].AlignedByteOffset = 32;
+	vertexDesc[3].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
+
+	//-----------------------------------------------------
+	// Input Layout								
+	//-----------------------------------------------------
+
+	D3DX11_PASS_DESC passDesc{};
+	m_pTechnique->GetPassByIndex(0)->GetDesc(&passDesc);
+
+	const HRESULT result = pDevice->CreateInputLayout(vertexDesc, numElements, passDesc.pIAInputSignature, passDesc.IAInputSignatureSize, &m_pInputLayout);
+	if (FAILED(result)) assert(false);
+
 }
 
 Effect::~Effect()
@@ -106,40 +95,8 @@ Effect::~Effect()
 	{
 		m_pSamplerStateVariable->Release();
 	}
-
-	//Maps
-
-	if (m_pGlossinessMapVariable)
-	{
-		m_pGlossinessMapVariable->Release();
-	}
-
-	if (m_pSpecularMapVariable)
-	{
-		m_pSpecularMapVariable->Release();
-	}
-
-	if (m_pNormalMapVariable)
-	{
-		m_pNormalMapVariable->Release();
-	}
-
-	if (m_pDiffuseMapVariable)
-	{
-		m_pDiffuseMapVariable->Release();
-	}
 	
 	//Matrices
-
-	if (m_pViewInverseMatrix)
-	{
-		m_pViewInverseMatrix->Release();
-	}
-
-	if (m_pWorldMatrix)
-	{
-		m_pWorldMatrix->Release();
-	}
 
 	if (m_pWorldViewProjectionMatrix)
 	{
@@ -176,51 +133,16 @@ ID3D11InputLayout* Effect::GetInputLayout() const
 	return m_pInputLayout;
 }
 
-void Effect::SetMatrices(const dae::Matrix& worldViewProjection, const dae::Matrix& world, const dae::Matrix& viewInverse)
+void Effect::SetMatrices(dae::Camera* pCamera, const dae::Matrix& worldMatrix)
 {
-	m_pWorldViewProjectionMatrix->SetMatrix(reinterpret_cast<const float*>(&worldViewProjection));
-	m_pWorldMatrix->SetMatrix(reinterpret_cast<const float*>(&world));
-	m_pViewInverseMatrix->SetMatrix(reinterpret_cast<const float*>(&viewInverse));
-}
-
-void Effect::SetMatrix(const dae::Matrix& worldViewProjection)
-{
-	m_pWorldViewProjectionMatrix->SetMatrix(reinterpret_cast<const float*>(&worldViewProjection));
+	const dae::Matrix worldViewProjectionMatrix{ worldMatrix * pCamera->viewMatrix * pCamera->projectionMatrix };
+	m_pWorldViewProjectionMatrix->SetMatrix(reinterpret_cast<const float*>(&(worldViewProjectionMatrix)));
 }
 
 void Effect::SetSamplerState(ID3D11SamplerState* pSamplerState)
 {
 	HRESULT hr{ m_pSamplerStateVariable->SetSampler(0, pSamplerState) };
 	if (FAILED(hr)) std::wcout << L"Failed to change sample state";
-}
-
-void Effect::SetDiffuseMap(Texture* pDiffuseTexture)
-{
-	if (m_pDiffuseMapVariable)
-		m_pDiffuseMapVariable->SetResource(pDiffuseTexture->GetResource());
-	std::wcout << L"Diffuse map: OK\n";
-}
-
-void Effect::SetNormalMap(Texture* pNormalTexture)
-{
-	if (m_pNormalMapVariable)
-		m_pNormalMapVariable->SetResource(pNormalTexture->GetResource());
-	std::wcout << L"Normal map: OK\n";
-}
-
-void Effect::SetSpecularMap(Texture* pSpecularTexture)
-{
-	if (m_pSpecularMapVariable)
-		m_pSpecularMapVariable->SetResource(pSpecularTexture->GetResource());
-	std::wcout << L"Specular map: OK\n";
-}
-
-void Effect::SetGlossinessMap(Texture* pGlossinessTexture)
-{
-	if (m_pGlossinessMapVariable)
-		m_pGlossinessMapVariable->SetResource(pGlossinessTexture->GetResource());
-
-	std::wcout << L"Glossines map: OK\n";
 }
 
 ID3DX11Effect* Effect::LoadEffect(ID3D11Device* pDevice, const std::wstring& assetFile)

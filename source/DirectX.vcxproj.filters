@@ -50,9 +50,6 @@
     <ClInclude Include="Effect.h">
       <Filter>DataTypes\Effects</Filter>
     </ClInclude>
-    <ClInclude Include="EffectUV.h">
-      <Filter>DataTypes\Effects</Filter>
-    </ClInclude>
     <ClInclude Include="Renderer.h" />
     <ClInclude Include="Camera.h">
       <Filter>DataTypes</Filter>
@@ -69,6 +66,12 @@
     </ClInclude>
     <ClInclude Include="MeshOpaque.h">
       <Filter>DataTypes\Meshes</Filter>
+    </ClInclude>
+    <ClInclude Include="EffectTransparent.h">
+      <Filter>DataTypes\Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="EffectOpaque.h">
+      <Filter>DataTypes\Effects</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -95,9 +98,6 @@
     <ClCompile Include="Effect.cpp">
       <Filter>DataTypes\Effects</Filter>
     </ClCompile>
-    <ClCompile Include="EffectUV.cpp">
-      <Filter>DataTypes\Effects</Filter>
-    </ClCompile>
     <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="Sampler.cpp">
       <Filter>DataTypes</Filter>
@@ -110,6 +110,12 @@
     </ClCompile>
     <ClCompile Include="MeshOpaque.cpp">
       <Filter>DataTypes\Meshes</Filter>
+    </ClCompile>
+    <ClCompile Include="EffectTransparent.cpp">
+      <Filter>DataTypes\Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="EffectOpaque.cpp">
+      <Filter>DataTypes\Effects</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

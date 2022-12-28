@@ -4,6 +4,10 @@
 //-----------------------------------------------------
 class Effect;
 class Texture;
+namespace dae
+{
+	struct Camera;
+}
 
 struct Vertex
 {
@@ -35,6 +39,7 @@ public:
 	//-------------------------------------------------
 	void Render(ID3D11DeviceContext* pDeviceContext);
 	void SetSamplerState(ID3D11SamplerState* pSamplerState);
+	void SetMatrices(dae::Camera* pCamera);
 
 	void Translate(const dae::Vector3& translation);
 	void RotateY(float angle);

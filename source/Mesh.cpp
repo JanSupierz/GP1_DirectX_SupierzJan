@@ -4,9 +4,9 @@
 #include "pch.h"
 #include "Mesh.h"
 #include "Texture.h"
-#include "EffectUV.h"
 #include <iostream>
 #include "Utils.h"
+#include "Effect.h"
 
 //---------------------------
 // Constructor & Destructor
@@ -94,6 +94,11 @@ void Mesh::Render(ID3D11DeviceContext* pDeviceContext)
 void Mesh::SetSamplerState(ID3D11SamplerState* pSamplerState)
 {
 	m_pEffect->SetSamplerState(pSamplerState);
+}
+
+void Mesh::SetMatrices(dae::Camera* pCamera)
+{
+	m_pEffect->SetMatrices(pCamera, m_WorldMatrix);
 }
 
 void Mesh::Translate(const dae::Vector3& translation)
